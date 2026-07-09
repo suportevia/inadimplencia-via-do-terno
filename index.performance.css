@@ -1,0 +1,57 @@
+/* Revisão 27 — CSS de desempenho. Não altera regras de negócio. */
+.r27-perf-container,
+#clientesBody,
+#rankingBody,
+#representantesBody,
+#autoAgenda129,
+#autoAgenda3045,
+#autoAgenda4659,
+#autoAgenda60,
+#agendaPendentesBody,
+#agendaConcluidosBody,
+#crmAgendaBody,
+#promessasBody,
+#kanbanBody,
+#timelineBody,
+#cobradoresBody,
+#previewBody,
+#historicoClienteBody,
+#historicoClienteBodyModal {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 720px;
+}
+
+/* Reduz custo de pintura em listas e cards grandes. */
+.crm-card,
+.kanban-col,
+.auto-agenda-col,
+.agenda-operacao-col,
+.timeline-item,
+.hc-card,
+.client-row,
+.metric,
+.panel {
+  contain: layout paint style;
+}
+
+/* Evita animações/transições pesadas quando há grande volume de dados. */
+.r27-performance-active .kanban-card,
+.r27-performance-active .crm-card,
+.r27-performance-active .metric,
+.r27-performance-active .panel,
+.r27-performance-active .auto-agenda-list > *,
+.r27-performance-active .agenda-operacao-list > *,
+.r27-performance-active .crm-scroll-list > * {
+  transition-duration: 0.08s !important;
+}
+
+/* Scroll mais estável nas áreas grandes. */
+.carteira-scroll,
+.crm-scroll-list,
+.auto-agenda-list,
+.agenda-operacao-list,
+.kanban-board,
+.crm-timeline {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
