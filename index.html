@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Via do Terno | Inteligência de Inadimplência</title>
+<link href="ESCUDO.png" rel="icon" type="image/png"/>
+<link href="index.css" rel="stylesheet"/>
+</head>
+<body class="auth-loading">
+<section aria-label="Login do sistema" class="login-screen" id="loginScreen">
+<div class="login-card">
+<img alt="Via do Terno" class="login-logo" src="ESCUDO.png"/>
+<p class="eyebrow">Acesso restrito</p>
+<h1>Inteligência de Inadimplência</h1>
+<p class="login-subtitle">Entre com seu e-mail e senha para acessar o sistema.</p>
+<form class="login-form" id="loginForm">
+<label for="loginEmail">E-mail</label>
+<input autocomplete="email" id="loginEmail" placeholder="seuemail@empresa.com.br" required="" type="email"/>
+<label for="loginSenha">Senha</label>
+<input autocomplete="current-password" id="loginSenha" placeholder="Digite sua senha" required="" type="password"/>
+<button id="btnLogin" type="submit">Entrar</button>
+<div aria-live="polite" class="login-status" id="loginStatus" role="status"></div>
+</form>
+</div>
+</section>
+<aside class="sidebar">
+<div class="brand">
+<img alt="Via do Terno" class="logo logo-img" src="ESCUDO.png"/>
+<div class="brand-text">
+<strong>Via do Terno</strong>
+<small>Crédito &amp; Cobrança</small>
+</div>
+<button class="theme-toggle" id="btnTema" type="button" title="Alternar tema">🌙</button>
+</div>
+<nav><span class="nav-group-label">Operação</span><a href="#dashboard">Dashboard</a><a href="#importacao">Importação</a><a href="#base-clientes">Base clientes</a><a href="#agenda-automatica">Agenda automática</a><a href="#clientes">Carteira</a><a href="#crm">CRM Cobrança</a><a href="#crm-agenda">Operação diária</a><a href="#crm-promessas">Promessas</a><span class="nav-group-label">Gestão</span><a href="#ranking">Rankings</a><span class="nav-group-label">Relatórios</span><a href="#relatorios">Relatórios</a></nav>
+</aside>
+<main class="app">
+<header class="topbar">
+<div class="topbar-title">
+<img alt="Via do Terno" class="topbar-logo" src="ESCUDO.png"/>
+<div>
+<p class="eyebrow">Sistema demonstrativo</p>
+<h1>Inteligência de Inadimplência</h1>
+<p>Histórico dos clientes, score de risco, duplicatas vencidas e gestão de cobrança.</p>
+</div>
+</div>
+<div class="top-actions">
+<div class="user-chip" id="userChip" title="Usuário logado">
+<span class="user-dot"></span>
+<span id="usuarioLogado">Usuário</span>
+</div>
+<button class="secondary" id="btnLogout" type="button">Sair</button>
+<button class="secondary" id="btnCarregarDemo">Carregar dados exemplo</button>
+<button class="danger" id="btnLimparTudo">Limpar dados</button>
+</div>
+</header>
+<section class="grid cards-grid" id="dashboard">
+<article class="metric danger-soft">
+<small>Total vencido</small>
+<strong id="mTotalVencido">R$ 0,00</strong>
+<span id="mQtdDuplicatas">0 duplicatas em aberto</span>
+</article>
+<article class="metric">
+<small>Clientes em risco</small>
+<strong id="mClientesRisco">0</strong>
+<span>Score laranja ou vermelho</span>
+</article>
+<article class="metric">
+<small>Acima de 30 dias</small>
+<strong id="mAcima30">R$ 0,00</strong>
+<span>Prioridade de cobrança</span>
+</article>
+</section>
+<section class="panel" id="importacao">
+<div class="panel-header">
+<div>
+<p class="eyebrow">Importação inteligente</p>
+<h2>Importar CSV do ERP</h2>
+<p>Layout oficial: CODCLI, CLIENTE, DUPLICATA, DT_EMISSAO, DT_VENCTO, VALOR, REPRESENTANTE, CIDADE, TELEFONE, FATURA, PEDIDO e STATUS.</p>
+</div>
+</div>
+<div class="import-grid">
+<label class="dropzone">
+<input accept=".csv,.txt" id="arquivoCsv" type="file"/>
+<strong>Selecionar planilha CSV/TXT</strong>
+<span>Separadores aceitos: ; , TAB. A primeira linha pode ser cabeçalho.</span>
+</label>
+<div class="map-preview">
+<h3>Status da importação</h3>
+<p id="importStatus">Nenhum arquivo importado ainda.</p>
+<pre id="importLog"></pre>
+<button id="btnImportar" type="button">Importar arquivo</button>
+</div>
+</div>
+</section>
+<section class="panel" id="base-clientes">
+<div class="panel-header">
+<div>
+<p class="eyebrow">Base cadastral</p>
+<h2>Importar clientes cadastrados</h2>
+<p>Layout do CSV: <strong>codcli, cnpj, nome, nome_rep, data fund.</strong> Essa base será usada para relatório de tempo de praça.</p>
+</div>
+</div>
+<div class="import-grid">
+<label class="dropzone">
+<input accept=".csv,.txt" id="arquivoClientesCsv" type="file"/>
+<strong>Selecionar CSV de clientes</strong>
+<span>Colunas obrigatórias nessa ordem: codcli, cnpj, nome, nome_rep, data fund.</span>
+</label>
+<div class="map-preview">
+<h3>Status da base de clientes</h3>
+<p id="clientesImportStatus">Nenhum arquivo de clientes importado ainda.</p>
+<pre id="clientesImportLog"></pre>
+<button id="btnImportarClientes" type="button">Importar clientes</button>
+</div>
+</div>
+<p id="clientesCadastroResumo" class="muted" style="margin-top:10px;">Nenhum cliente importado ainda.</p>
+<div class="table-wrap fixed-scroll carteira-scroll" style="margin-top:10px; max-height:360px;">
+<table class="sortable-table carteira-table">
+<thead><tr><th data-sort-clientes-cadastro="codcli" title="Clique para ordenar">Código</th><th data-sort-clientes-cadastro="cnpj" title="Clique para ordenar">CNPJ</th><th data-sort-clientes-cadastro="nome" title="Clique para ordenar">Cliente</th><th data-sort-clientes-cadastro="nome_rep" title="Clique para ordenar">Representante</th><th data-sort-clientes-cadastro="dataFund" title="Clique para ordenar">Data fund.</th><th data-sort-clientes-cadastro="tempoPraca" title="Clique para ordenar">Tempo de praça</th></tr></thead>
+<tbody id="clientesCadastroBody"></tbody>
+</table>
+</div>
+</section>
+
+<section class="panel auto-agenda-panel" id="agenda-automatica">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Agenda automática</p>
+      <h2>Fila automática por dias vencidos</h2>
+      <p>Gerada automaticamente após a importação. Clientes vencidos entram automaticamente nas faixas 1-29, 30-45, 46-59 e 60+ dias. Clientes com ticket aberto ficam no final da fila; clientes quitados saem da fila.</p>
+    </div>
+    <button class="secondary small" id="btnAtualizarAgendaAuto" type="button">Atualizar fila</button>
+  </div>
+  <div class="auto-agenda-summary" id="agendaAutoResumo"></div>
+  <div class="auto-agenda-columns">
+    <article class="auto-agenda-col prioridade">
+      <div class="auto-col-head"><strong>1 a 29 dias</strong><small>Prioridade: cobrança mais fácil</small><span id="autoCount129">0</span></div>
+      <div class="auto-col-search"><input id="autoBusca129" type="search" placeholder="Pesquisar cliente..." autocomplete="off" /></div>
+      <div class="auto-agenda-list" id="autoAgenda129"></div>
+    </article>
+    <article class="auto-agenda-col alerta">
+      <div class="auto-col-head"><strong>30 a 45 dias</strong><small>Atenção: cobrança crítica</small><span id="autoCount3045">0</span></div>
+      <div class="auto-col-search"><input id="autoBusca3045" type="search" placeholder="Pesquisar cliente..." autocomplete="off" /></div>
+      <div class="auto-agenda-list" id="autoAgenda3045"></div>
+    </article>
+    <article class="auto-agenda-col atencao">
+      <div class="auto-col-head"><strong>46 a 59 dias</strong><small>Atenção: não deixar sem fila</small><span id="autoCount4659">0</span></div>
+      <div class="auto-col-search"><input id="autoBusca4659" type="search" placeholder="Pesquisar cliente..." autocomplete="off" /></div>
+      <div class="auto-agenda-list" id="autoAgenda4659"></div>
+    </article>
+    <article class="auto-agenda-col critica">
+      <div class="auto-col-head"><strong>60+ dias</strong><small>Prioridade alta de regularização</small><span id="autoCount60">0</span></div>
+      <div class="auto-col-search"><input id="autoBusca60" type="search" placeholder="Pesquisar cliente..." autocomplete="off" /></div>
+      <div class="auto-agenda-list" id="autoAgenda60"></div>
+    </article>
+  </div>
+</section>
+<section class="grid two-cols">
+<article class="panel" id="ranking">
+<div class="panel-header">
+<div>
+<p class="eyebrow">Prioridade</p>
+<h2>Ranking de maiores devedores</h2>
+</div>
+<button class="secondary small" id="btnVerRankingDevedores" type="button">Ver</button>
+</div>
+<div class="table-wrap compact">
+<table>
+<thead><tr><th>Pos.</th><th>Cliente</th><th>Dias</th><th>Valor</th><th>Score</th></tr></thead>
+<tbody id="rankingBody"></tbody>
+</table>
+</div>
+</article>
+<article class="panel">
+<div class="panel-header">
+<div>
+<p class="eyebrow">Representantes</p>
+<h2>Inadimplência por representante</h2>
+</div>
+<button class="secondary small" id="btnVerRankingRepresentantes" type="button">Ver</button>
+</div>
+<div class="rep-list" id="representantesBody"></div>
+</article>
+</section>
+<section class="panel" id="clientes">
+<div class="panel-header">
+<div>
+<p class="eyebrow">Carteira</p>
+<h2>Clientes e histórico</h2>
+<p class="sort-hint">Clique no nome da coluna para ordenar do menor para o maior ou do maior para o menor.</p>
+</div>
+<div class="filters">
+<input id="busca" placeholder="Buscar cliente, cidade, representante..." type="search"/>
+<select id="filtroScore">
+<option value="">Todos os scores</option>
+<option value="Excelente">Excelente</option>
+<option value="Atenção">Atenção</option>
+
+<option value="Não vender">Não vender</option>
+</select>
+</div>
+</div>
+<div class="table-wrap fixed-scroll carteira-scroll">
+<table class="sortable-table carteira-table">
+<thead>
+<tr>
+<th data-sort-clientes="cliente" title="Clique para ordenar">Cliente</th>
+<th data-sort-clientes="codcli" title="Clique para ordenar">Código</th>
+<th data-sort-clientes="representante" title="Clique para ordenar">Representante</th>
+<th data-sort-clientes="cidade" title="Clique para ordenar">Cidade</th>
+<th data-sort-clientes="total" title="Clique para ordenar">Valor vencido</th>
+<th data-sort-clientes="maiorAtraso" title="Clique para ordenar">Maior atraso</th>
+<th data-sort-clientes="score" title="Clique para ordenar">Score</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody id="clientesBody"></tbody>
+</table>
+</div>
+</section>
+
+<section class="section-divider layout-added"><p class="eyebrow">Operação</p><h2>Rotina de cobrança e acompanhamento diário</h2></section><section class="panel crm-master" id="crm">
+<div class="panel-header">
+<div>
+<p class="eyebrow">CRM Cobrança</p>
+<h2>Agenda de negociações</h2>
+<p>Controle operacional de cobranças, promessas de pagamento, retornos e evolução das negociações.</p>
+</div>
+<div class="crm-header-actions">
+<button class="secondary" id="btnHistoricoCliente" type="button">Histórico</button>
+<button class="secondary" id="btnNovaAcao" type="button">Adicionar ação</button>
+</div>
+</div>
+<div class="crm-kpis" id="crmResumoBody"></div>
+<div class="crm-grid-main">
+<article class="crm-card agenda-operacao-card" id="crm-agenda">
+<div class="crm-card-head agenda-operacao-head">
+<div>
+<p class="eyebrow">Operação diária</p>
+<h3>Agenda do dia</h3>
+<p>Fluxo operacional da cobrança com pendências, concluídos, checklist e ações rápidas.</p>
+</div>
+<span class="crm-pill">Hoje</span>
+</div>
+<div class="agenda-operacao-resumo" id="agendaOperacaoResumo"></div>
+<div class="agenda-operacao-progress">
+<div>
+<strong id="agendaOperacaoProgressoTexto">0 de 0 tarefas</strong>
+<small>Produtividade do dia</small>
+</div>
+<div class="agenda-progress agenda-progress-wide"><span id="agendaOperacaoProgressoBar" style="width:0%"></span></div>
+<strong id="agendaOperacaoProgressoPct">0%</strong>
+</div>
+<div id="crmAgendaFiltros"></div>
+<div class="agenda-operacao-board">
+<section class="agenda-operacao-col">
+<div class="agenda-col-head">
+<div><strong>Pendentes</strong><small>Contatos e retornos para executar</small></div>
+<span id="agendaPendentesCount">0</span>
+</div>
+<div class="agenda-col-search"><input id="agendaPendentesSearch" type="search" placeholder="Pesquisar cliente pendente..." autocomplete="off"></div>
+<div class="agenda-operacao-list" id="agendaPendentesBody"></div>
+</section>
+<section class="agenda-operacao-col concluida">
+<div class="agenda-col-head">
+<div><strong>Concluídos</strong><small>Tickets finalizados ou checklist completo</small></div>
+<span id="agendaConcluidosCount">0</span>
+</div>
+<div class="agenda-col-search"><input id="agendaConcluidosSearch" type="search" placeholder="Pesquisar cliente concluído..." autocomplete="off"></div>
+<div class="agenda-operacao-list" id="agendaConcluidosBody"></div>
+</section>
+</div>
+<div class="crm-scroll-list agenda-scroll-list agenda-legacy-hidden" id="crmAgendaBody"></div>
+</article>
+<article class="crm-card" id="crm-promessas">
+<div class="crm-card-head">
+<div>
+<p class="eyebrow">Compromissos</p>
+<h3>Promessas de pagamento</h3>
+</div>
+<span class="crm-pill warning">Acompanhar</span>
+</div>
+<div class="crm-scroll-list" id="promessasBody"></div>
+</article>
+</div>
+<article class="crm-card kanban-card">
+<div class="crm-card-head kanban-head">
+<div>
+<p class="eyebrow">Funil de cobrança</p>
+<h3>Kanban de negociações</h3>
+</div>
+<div class="kanban-actions">
+<input id="kanbanBusca" class="kanban-search" type="search" placeholder="Pesquisar cliente..." />
+<select id="kanbanResponsavel" class="kanban-select"><option value="">Todos responsáveis</option></select>
+<button class="secondary small" id="btnExpandirKanban" type="button">⛶ Expandir</button>
+</div>
+</div>
+<div class="kanban-board" id="kanbanBody"></div>
+</article>
+<div class="crm-grid-main">
+<article class="crm-card">
+<div class="crm-card-head">
+<div>
+<p class="eyebrow">Histórico</p>
+<h3>Linha do tempo</h3>
+</div>
+<div class="timeline-actions">
+<input id="timelineBusca" class="timeline-search" type="search" placeholder="Pesquisar cliente..." autocomplete="off" />
+</div>
+</div>
+<div class="timeline crm-timeline" id="timelineBody"></div>
+</article>
+<article class="crm-card">
+<div class="crm-card-head crm-card-head-with-filter">
+<div>
+<p class="eyebrow">Produtividade</p>
+<h3>Ranking dos cobradores</h3>
+</div>
+<div class="ranking-periodo" aria-label="Filtro de período do ranking dos cobradores">
+<label>De:<input id="rankingCobDataIni" type="date" /></label>
+<label>Até:<input id="rankingCobDataFim" type="date" /></label>
+<button class="secondary small" id="btnRankingCobAplicar" type="button">Aplicar</button>
+<button class="secondary small" id="btnRankingCobHoje" type="button">Hoje</button>
+<button class="secondary small" id="btnRankingCobSemana" type="button">Semana</button>
+<button class="secondary small" id="btnRankingCobMes" type="button">Mês</button>
+</div>
+</div>
+<div class="ranking-periodo-info" id="rankingCobPeriodoInfo"></div>
+<div class="crm-scroll-list" id="cobradoresBody"></div>
+</article>
+</div>
+<article class="crm-card whatsapp-card">
+<div class="crm-card-head">
+<div>
+<p class="eyebrow">Cobrança rápida</p>
+<h3>Modelos automáticos de WhatsApp</h3>
+<p>Nos cards da agenda e da linha do tempo, use o botão WhatsApp para copiar uma mensagem pronta com dados do cliente.</p>
+</div>
+</div>
+<div class="whatsapp-models">
+<div><strong>1. Primeiro contato</strong><small>Mensagem objetiva com valor vencido e pedido de retorno.</small></div>
+<div><strong>2. Promessa vencida</strong><small>Cobrança de compromisso não cumprido.</small></div>
+<div><strong>3. Bloqueio de crédito</strong><small>Comunicado de análise antes de novo pedido.</small></div>
+</div>
+</article>
+</section>
+<section class="section-divider layout-added"><p class="eyebrow">Relatórios</p><h2>Exportações e análises gerenciais</h2></section><section class="panel reports-panel reports-final" id="relatorios">
+<div class="panel-header">
+<div>
+<p class="eyebrow">Central de relatórios</p>
+<h2>Relatórios e exportações</h2>
+<p>Escolha o tipo de relatório, aplique filtros e exporte em PDF, Excel ou CSV.</p>
+</div>
+
+</div>
+
+<div class="backup-tickets-card">
+  <div>
+    <p class="eyebrow">Backup seguro</p>
+    <h3>Backup dos tickets</h3>
+    <p>Exporte todos os tickets salvos na nuvem em CSV ou Excel (.xlsx) para guardar uma cópia fora do sistema.</p>
+    <small id="backupTicketsInfo">Carregando quantidade de tickets...</small>
+  </div>
+  <div class="backup-tickets-actions">
+    <button id="btnBackupTicketsCsv" type="button">⬇ Backup CSV</button>
+    <button class="secondary" id="btnBackupTicketsExcel" type="button">⬇ Backup Excel (.xlsx)</button>
+  </div>
+</div>
+
+<div class="report-layout">
+<div aria-label="Tipos de relatório" class="report-menu">
+<button class="report-option active" data-report="executivo" type="button">
+<span>📄</span><strong>PDF Executivo</strong><small>Resumo para diretoria</small>
+</button>
+<button class="report-option" data-report="excelCompleto" type="button">
+<span>📊</span><strong>Excel Completo</strong><small>Resumo, clientes, duplicatas, representantes e CRM</small>
+</button>
+<button class="report-option" data-report="csvClientes" type="button">
+<span>👥</span><strong>CSV Clientes</strong><small>Carteira consolidada</small>
+</button>
+<button class="report-option" data-report="csvDuplicatas" type="button">
+<span>🧾</span><strong>CSV Duplicatas</strong><small>Faturas detalhadas</small>
+</button>
+<button class="report-option" data-report="representantes" type="button">
+<span>👔</span><strong>Representantes</strong><small>Inadimplência por carteira</small>
+</button>
+<button class="report-option" data-report="promessas" type="button">
+<span>📞</span><strong>CRM Cobranças</strong><small>Ações e negociações</small>
+</button>
+<button class="report-option" data-report="personalizado" type="button">
+<span>⚙️</span><strong>Detalhado</strong><small>Cliente, totais e duplicatas agrupadas</small>
+</button>
+<button class="report-option" data-report="funil" type="button"><span>🧭</span><strong>Funil da Cobrança</strong><small>Quantidade, valor e conversão por estágio</small></button>
+<button class="report-option" data-report="recuperacao" type="button"><span>💰</span><strong>Recuperação mensal</strong><small>Recuperado, prometido e aberto por mês</small></button>
+<button class="report-option" data-report="rankingCobradores" type="button"><span>🏆</span><strong>Ranking cobradores</strong><small>Produtividade e valor recuperado</small></button>
+<button class="report-option" data-report="promessasResumo" type="button"><span>✅</span><strong>Promessas</strong><small>Cumpridas, vencidas e aguardando</small></button>
+<button class="report-option" data-report="atraso" type="button"><span>⏱️</span><strong>Faixa de atraso</strong><small>1-30, 31-60, 61-90, 91+</small></button>
+<button class="report-option" data-report="carteira" type="button"><span>🗂️</span><strong>Carteira</strong><small>Representante, cidade, estado e cliente</small></button>
+<button class="report-option" data-report="eficiencia" type="button"><span>📈</span><strong>Eficiência</strong><small>Contatos, respostas, negociações e pagamentos</small></button>
+<button class="report-option" data-report="criticos" type="button"><span>🚨</span><strong>Clientes críticos</strong><small>Maiores dívidas, atrasos e riscos</small></button>
+<button class="report-option" data-report="agenda" type="button"><span>📅</span><strong>Agenda da cobrança</strong><small>Promessas vencendo e retornos</small></button>
+<button class="report-option" data-report="exclusoes" type="button"><span>🗑️</span><strong>Exclusões</strong><small>Tickets excluídos e motivo</small></button>
+<button class="report-option" data-report="financeiro" type="button"><span>💼</span><strong>Financeiro</strong><small>Total recuperado, aberto e prometido</small></button>
+<button class="report-option" data-report="mapa" type="button"><span>🗺️</span><strong>Mapa inadimplência</strong><small>Valores por estado e cidade</small></button>
+<button class="report-option" data-report="produtividade" type="button"><span>🧑‍💻</span><strong>Produtividade diária</strong><small>Ações por usuário e dia</small></button>
+<button class="report-option" data-report="metas" type="button"><span>🎯</span><strong>Metas</strong><small>Realizado estimado por cobrador</small></button>
+<button class="report-option" data-report="tempoPraca" type="button"><span>🏢</span><strong>Tempo de praça</strong><small>Clientes, valor e % por anos de CNPJ</small></button>
+
+</div>
+<div class="report-builder">
+
+<div class="report-export-area">
+  <button class="report-export-btn pdf" data-export-format="pdf" type="button">📄 Exportar PDF</button>
+  <button class="report-export-btn excel" data-export-format="excel" type="button">📊 Exportar Excel</button>
+  <button class="report-export-btn csv" data-export-format="csv" type="button">📥 Exportar CSV</button>
+
+  <select id="reportFormato" class="report-hidden-control" aria-hidden="true" tabindex="-1">
+    <option value="pdf">PDF</option>
+    <option value="excel">Excel</option>
+    <option value="csv">CSV</option>
+  </select>
+  <select id="reportRepresentante" class="report-hidden-control" aria-hidden="true" tabindex="-1">
+    <option value="">Todos</option>
+  </select>
+  <select id="reportScore" class="report-hidden-control" aria-hidden="true" tabindex="-1">
+    <option value="">Todos</option>
+    <option value="Excelente">Excelente</option>
+    <option value="Atenção">Atenção</option>
+    <option value="Não vender">Não vender</option>
+  </select>
+  <input id="reportDiasMin" class="report-hidden-control" min="0" type="number" value=""/>
+  <div class="report-hidden-control" aria-hidden="true">
+    <input checked data-report-section="dashboard" type="checkbox"/>
+    <input checked data-report-section="clientes" type="checkbox"/>
+    <input checked data-report-section="duplicatas" type="checkbox"/>
+    <input checked data-report-section="representantes" type="checkbox"/>
+    <input checked data-report-section="ranking" type="checkbox"/>
+    <input data-report-section="crm" type="checkbox"/>
+    <input checked data-report-section="score" type="checkbox"/>
+    <input checked data-report-section="logo" type="checkbox"/>
+  </div>
+</div>
+<div class="report-preview">
+<div class="preview-cover">
+<img alt="Via do Terno" class="preview-logo preview-logo-img" src="ESCUDO.png"/>
+<div>
+<small>Via do Terno</small>
+<h3 id="previewTitulo">Relatório Executivo de Inadimplência</h3>
+<p>Prévia dos dados que serão exportados.</p>
+</div>
+</div>
+<div class="preview-metrics" id="previewResumo"></div>
+<div class="report-preview-table">
+<table>
+<thead id="previewHead"></thead>
+<tbody id="previewBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</section></main>
+<div aria-hidden="true" class="modal" id="modal">
+<div class="modal-card">
+<button class="modal-close" id="btnFecharModal">×</button>
+<div id="modalContent"></div>
+</div>
+</div>
+<script src="index.js"></script>
+<!-- Firebase: conexão preparada para Hosting, Login, Firestore e Analytics -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCIRF52Zu2g7lzxku9Ad5ufHfBs-vikzzE",
+      authDomain: "inadimplencia-via-do-terno.firebaseapp.com",
+      projectId: "inadimplencia-via-do-terno",
+      storageBucket: "inadimplencia-via-do-terno.firebasestorage.app",
+      messagingSenderId: "691018260693",
+      appId: "1:691018260693:web:972b084f5dbe2e2899025c",
+      measurementId: "G-HJ6DGJFRR6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let analytics = null;
+    analyticsIsSupported().then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+        window.firebaseAnalytics = analytics;
+      }
+    }).catch(() => {
+      console.warn("Firebase Analytics não foi iniciado neste ambiente.");
+    });
+
+    window.firebaseApp = app;
+    window.firebaseAuth = auth;
+    window.firebaseDB = db;
+
+    const loginScreen = document.getElementById("loginScreen");
+    const loginForm = document.getElementById("loginForm");
+    const loginEmail = document.getElementById("loginEmail");
+    const loginSenha = document.getElementById("loginSenha");
+    const loginStatus = document.getElementById("loginStatus");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnLogout = document.getElementById("btnLogout");
+    const usuarioLogado = document.getElementById("usuarioLogado");
+
+    function setLoginStatus(mensagem, tipo = "info") {
+      if (!loginStatus) return;
+      loginStatus.textContent = mensagem || "";
+      loginStatus.dataset.tipo = tipo;
+    }
+
+    function liberarSistema(user) {
+      document.body.classList.remove("auth-loading", "auth-off");
+      document.body.classList.add("auth-ok");
+      if (usuarioLogado) usuarioLogado.textContent = user?.email || "Usuário logado";
+    }
+
+    function bloquearSistema() {
+      document.body.classList.remove("auth-loading", "auth-ok");
+      document.body.classList.add("auth-off");
+      if (loginScreen) loginScreen.style.display = "";
+      if (usuarioLogado) usuarioLogado.textContent = "Usuário";
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setLoginStatus("");
+        liberarSistema(user);
+      } else {
+        bloquearSistema();
+      }
+    });
+
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const email = (loginEmail?.value || "").trim();
+        const senha = loginSenha?.value || "";
+
+        if (!email || !senha) {
+          setLoginStatus("Informe e-mail e senha.", "error");
+          return;
+        }
+
+        try {
+          if (btnLogin) {
+            btnLogin.disabled = true;
+            btnLogin.textContent = "Entrando...";
+          }
+          setLoginStatus("Validando acesso...", "info");
+          await signInWithEmailAndPassword(auth, email, senha);
+          setLoginStatus("");
+          if (loginSenha) loginSenha.value = "";
+        } catch (error) {
+          console.error("Erro no login:", error);
+          const codigo = error?.code || "";
+          let mensagem = "Não foi possível entrar. Confira e-mail e senha.";
+          if (codigo.includes("auth/invalid-credential") || codigo.includes("auth/wrong-password") || codigo.includes("auth/user-not-found")) {
+            mensagem = "E-mail ou senha inválidos.";
+          }
+          if (codigo.includes("auth/too-many-requests")) {
+            mensagem = "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+          }
+          setLoginStatus(mensagem, "error");
+        } finally {
+          if (btnLogin) {
+            btnLogin.disabled = false;
+            btnLogin.textContent = "Entrar";
+          }
+        }
+      });
+    }
+
+    if (btnLogout) {
+      btnLogout.addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+        } catch (error) {
+          console.error("Erro ao sair:", error);
+          alert("Não foi possível sair agora.");
+        }
+      });
+    }
+
+    console.log("Firebase conectado: app, auth e firestore disponíveis.");
+  </script>
+</body>
+</html>
